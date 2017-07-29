@@ -2,9 +2,11 @@
 
 ################################################################################
 #                                                                              #
-# Assignment: GrEx3                                                            #
-# Author: Anton                                                                #
-# Date: 20170727                                                               #                                                       #
+# Assignment: GrEx2                                                            #
+# Author: Foltz, Anton                                                         #
+# Date: 20170727                                                               #
+# PREDICT420_58                                                                #
+# Professor Lynd Bacon                                                         #
 #                                                                              #
 ################################################################################
 #                                   PART I                                     #
@@ -34,6 +36,7 @@ path = '/Users/Anton/assignment3'
 # and comments when parsing each file
 comments = {}
 hotel_dfs = []
+first_run = True
 
 # Look for .json files in our path, and iterate over each file for processing
 pathlist = Path(path).glob('**/*.json')
@@ -44,7 +47,11 @@ for item in pathlist:
     
     # Open each .json file and process and load the data from the input file
     with open(json_file, 'r') as input_file:
-        jsondat=json.load(input_file)
+        try:
+            jsondat=json.load(input_file)
+        except ValueError:
+            print '\n[!] Invalid JSON file detecetd from %s!' % input_file
+            continue
         
         # Store the hotel name as a variable. Since the name exists in the URL, extract the
         # name from the URL and set the variable that way. Use regex to extract and format.
@@ -59,7 +66,7 @@ for item in pathlist:
             except KeyError:
                 print '\n[!] Parsing error generated from %s' % json_file
                 print '[!] This file is a post-processed or non-hotel review file!'
-                sys.exit(1)
+                continue
         
         # Set the hotelID. This is needed for creating a dict of dicts of our comments.
         # Use map to extract each review and create a new column to hold each value.
@@ -72,7 +79,7 @@ for item in pathlist:
         except KeyError:
             print '\n[!] Parsing error generated from %s' % json_file
             print '[!] This file is a post-processed or non-hotel review file!'
-            sys.exit(1)
+            continue
         
         # Get rid of the unnecessary columns, if they exist. Use try/except for those that 
         # don't have the columns we are looking for. 
@@ -92,42 +99,61 @@ for item in pathlist:
             name = re.sub(r'\s+', '_', name)
             df.rename(columns={head:name}, inplace=True)
         
+        # Function to perform regex to remove html and chars from author names.  
+        def replace_bad(author):
+            auth_regex = re.compile(r'<.*?>')
+            author = auth_regex.sub('', author)
+            author = author.replace('?>', '')
+            return author.replace('?', '')
+        
+        # Remove the html tags in some of the author names, but leave chinese chars
+        df['author'] = df['author'].apply(lambda x: replace_bad(x))
+        
+        # Add a column for the hotel name
+        df.loc[:,'hotel_name'] = str(hotel_name)
+
         # Append the dataframe to our list so we can concat them once all files are processed.
         hotel_dfs.append(df)
 
         # Extract the number of reviews by counting the number of reviewIDs in the dataframe.
         top = df['reviewid'].describe()
-        print '[+] %s Review Count: %s' % (hotel_name, int(top['count']))
+        
+        if first_run:
+            print '[+] Review counts per hotel:'
+            first_run = False
+            
+        print '%s Review Count: %s' % (hotel_name, int(top['count']))
 
 '''
 Results:
 
-[+] Hotel Seattle Review Count: 48
-[+] Deca Hotel Review Count: 1
-[+] Riu Bambu Review Count: 710
-[+] Park Shore Waikiki Review Count: 174
-[+] Kendall Hotel and Suites Review Count: 52
-[+] San Diego Marriott Mission Valley Review Count: 96
-[+] Hotel Banys Orientals Review Count: 188
-[+] Meninas Hotel Review Count: 167
-[+] Balisandy Cottages Review Count: 1
-[+] Plaza Madrid Review Count: 1
-[+] BEST WESTERN PLUS Pioneer Square Hotel Review Count: 233
-[+] BEST WESTERN Loyal Inn Review Count: 113
-[+] BEST WESTERN PLUS Executive Inn Review Count: 137
-[+] Comfort Inn & Suites Seattle Review Count: 36
-[+] Christopher's Inn Review Count: 93
-[+] BEST WESTERN Market Center Review Count: 54
-[+] BEST WESTERN Airport Inn Review Count: 45
-[+] Super 8 Phoenix Review Count: 25
-[+] Lexington Hotel Central Phoenix Review Count: 57
-[+] Grace Inn Phoenix Review Count: 44
-[+] BEST WESTERN PLUS InnSuites Phoenix Hotel & Suites Review Count: 60
-[+] A Victory Inn & Suites Phoenix North Review Count: 32
-[+] Courtyard by Marriott Phoenix North Review Count: 19
-[+] Renaissance Phoenix Downtown Review Count: 36
-[+] Days Inn Camelback Phoenix and Conference Center Review Count: 39
-[+] Days Inn I-17 & Thomas Review Count: 24
+[+] Review counts per hotel:
+Hotel Seattle Review Count: 48
+Deca Hotel Review Count: 1
+Riu Bambu Review Count: 710
+Park Shore Waikiki Review Count: 174
+Kendall Hotel and Suites Review Count: 52
+San Diego Marriott Mission Valley Review Count: 96
+Hotel Banys Orientals Review Count: 188
+Meninas Hotel Review Count: 167
+Balisandy Cottages Review Count: 1
+Plaza Madrid Review Count: 1
+BEST WESTERN PLUS Pioneer Square Hotel Review Count: 233
+BEST WESTERN Loyal Inn Review Count: 113
+BEST WESTERN PLUS Executive Inn Review Count: 137
+Comfort Inn & Suites Seattle Review Count: 36
+Christopher's Inn Review Count: 93
+BEST WESTERN Market Center Review Count: 54
+BEST WESTERN Airport Inn Review Count: 45
+Super 8 Phoenix Review Count: 25
+Lexington Hotel Central Phoenix Review Count: 57
+Grace Inn Phoenix Review Count: 44
+BEST WESTERN PLUS InnSuites Phoenix Hotel & Suites Review Count: 60
+A Victory Inn & Suites Phoenix North Review Count: 32
+Courtyard by Marriott Phoenix North Review Count: 19
+Renaissance Phoenix Downtown Review Count: 36
+Days Inn Camelback Phoenix and Conference Center Review Count: 39
+Days Inn I-17 & Thomas Review Count: 24
 '''       
 
 # Combine the dataframes into a signle dataframe. Merge on column names.
@@ -136,7 +162,8 @@ final = pd.concat(hotel_dfs, ignore_index=True)
 # Convert the files to strings and numeric values. Strings include the date, reviewid, and
 # author. All other values are floats. We need numeric values for retrieving statistics. 
 # Keep all missing values as NaN for ease of describe() statistic more accurate since it 
-# does not count NaN values. Change -1 values to NaN. Key: 0-5, -1 values equal missing values.
+# does not count NaN values. Change -1 values to NaN. Key: 0-5, and
+# -1 values equal missing values.
 for col in get_columns(final):
     try:
         if col == 'overall' or col == 'value':
@@ -147,7 +174,9 @@ for col in get_columns(final):
     except AttributeError:
         final[col] = pd.to_numeric(final[col], downcast='float')
 
-final.replace(-1, np.nan, inplace=True)        
+# Replace -1 values with np.nan. -1 value indicates a missing value. 
+final.replace(-1, np.nan, inplace=True) 
+
 # Get the combined statistics of the overall column using describe().
 print '\n[+] Overall Hotel Info (Combined):\n%s' % final.describe()['overall']
 
@@ -236,4 +265,8 @@ Result:
 
 [+] JSON file wrote to: /Users/Anton/assignment3
 '''
-print
+
+print '\n[+] DONE!!!'
+# Debugging statement to view keys in dict of dicts
+# print '\n[+] Dict keys: '
+# print final_dict.keys()
