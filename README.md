@@ -1,2 +1,2 @@
 # Predictive-Analytics
-Projects from MS in Predictive Analytics
+Projects for Predictive Analytics
