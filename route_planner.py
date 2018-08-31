@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-@author      : Anton Foltz
+@author      : Anton
 @date        : August 23, 2018
 @description : A Python script that can be used to optimize a driving route
              : by leverage Gurobipy and the Google Distance Matrix API. This 
