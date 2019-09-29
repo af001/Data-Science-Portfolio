@@ -2,3 +2,5 @@
 
 ### Week1 - Google Colab Project
 
+Train a classification model for the Fashion MNIST Kaggle Project with [Kaggle Data](https://www.kaggle.com/zalando-research/fashionmnist). 
+
