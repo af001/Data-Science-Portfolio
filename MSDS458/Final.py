@@ -1,7 +1,6 @@
 '''
-@author      : Anton Foltz
+@author      : Anton 
 @class       : MSDS 458
-@professor   : Dr. Alianna Maren
 @date        : December 9, 2018
 @description : A Python 3 script used to unzip and extract the flowers dataset
                into testing, training, and validation sets
@@ -123,9 +122,8 @@ else:
 print(' > data export and organization complete')
 
 '''
-@author      : Anton Foltz
+@author      : Anton 
 @class       : MSDS 458
-@professor   : Dr. Alianna Maren
 @date        : December 9, 2018
 @description : A Python 3 script used analyze the intermediate layers (hidden layers) of
                of a test image. Analayze activations, filters, and CAM
