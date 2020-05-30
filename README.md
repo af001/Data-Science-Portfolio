@@ -1,5 +1,4 @@
 # Northwestern MSDS 
 Northwestern University MS in Data Science - Portfolio
 
-This repo contains Python code that was used for assignments while attending Northwestern University. 
-
+This portfolio is a compilation of notebooks that I have created over the course of my studies for my Masters in Data Science at Northwestern University as well as personal/side projects
